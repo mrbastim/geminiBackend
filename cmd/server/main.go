@@ -15,16 +15,17 @@ func main() {
 	log.SetPrefix("[gemini] ")
 	log.Println("Запуск сервера...")
 	r := mux.NewRouter()
-
-	// Настройка маршрутов
-	r.HandleFunc("/items", handlers.GetOptions).Methods("GET")
-	r.HandleFunc("/items", handlers.PostResponse).Methods("POST")
-
 	//Читаем конфигурацию
 	config, err := config.LoadConfig("config/config.json")
 	if err != nil {
 		log.Fatalf("Ошибка при загрузке конфигурации: %v", err)
 	}
+
+	// Настройка маршрутов
+	r.HandleFunc("/options", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetOptions(w, r, config)
+	}).Methods("GET")
+	r.HandleFunc("/items", handlers.PostResponse).Methods("POST")
 
 	// Запуск HTTP-сервера
 	log.Println("Сервер запущен на порту", config.Port)

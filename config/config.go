@@ -1,28 +1,28 @@
 package config
 
 import (
-    "encoding/json"
-    "os"
+	"encoding/json"
+	"os"
 )
 
 type Config struct {
-    Port string `json:"port"`
-    Env  string `json:"env"`
+	Port      string `json:"port"`
+	ApiGemini string `json:"apiGemini"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
-    file, err := os.Open(filePath)
-    if err != nil {
-        return nil, err
-    }
-    defer file.Close()
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-    config := &Config{}
-    decoder := json.NewDecoder(file)
-    err = decoder.Decode(config)
-    if err != nil {
-        return nil, err
-    }
+	config := &Config{}
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(config)
+	if err != nil {
+		return nil, err
+	}
 
-    return config, nil
+	return config, nil
 }
