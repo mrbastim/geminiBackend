@@ -56,7 +56,7 @@ func Login(w http.ResponseWriter, r *http.Request, config *config.Config) {
 		return
 	}
 
-	// Простая проверка учетных данных (в продакшене используйте БД и хеширование)
+	// Простая проверка учетных данных (TODO: в продакшене используйте БД и хеширование)
 	var role string
 	if req.Username == "admin" && req.Password == "admin123" {
 		role = "admin"
