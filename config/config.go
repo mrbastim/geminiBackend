@@ -7,7 +7,8 @@ import (
 
 type Config struct {
 	Port      string `json:"port"`
-	ApiGemini string `json:"apiGemini"`
+	ApiGemini string `json:"apiGeminiKey"`
+	JWTSecret string `json:"jwtSecret"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {

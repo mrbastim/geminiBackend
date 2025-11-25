@@ -3,6 +3,7 @@ package main
 import (
 	"geminiBackend/config"
 	"geminiBackend/internal/handlers"
+	"geminiBackend/internal/middleware"
 	"log"
 	"net/http"
 
@@ -21,11 +22,26 @@ func main() {
 		log.Fatalf("Ошибка при загрузке конфигурации: %v", err)
 	}
 
-	// Настройка маршрутов
-	r.HandleFunc("/options", func(w http.ResponseWriter, r *http.Request) {
+	// Публичный маршрут для авторизации
+	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Handling /login request")
+		handlers.Login(w, r, config)
+	}).Methods("POST")
+
+	// Защищенные маршруты
+	// /options - только для админов
+	adminRouter := r.PathPrefix("/options").Subrouter()
+	adminRouter.Use(middleware.JWTAuth(config.JWTSecret))
+	adminRouter.Use(middleware.RequireAdmin)
+	adminRouter.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Handling /options request")
 		handlers.GetOptions(w, r, config)
 	}).Methods("GET")
-	r.HandleFunc("/items", handlers.PostResponse).Methods("POST")
+
+	// /items - для всех авторизованных пользователей
+	authRouter := r.PathPrefix("/items").Subrouter()
+	authRouter.Use(middleware.JWTAuth(config.JWTSecret))
+	authRouter.HandleFunc("", handlers.PostResponse).Methods("POST")
 
 	// Запуск HTTP-сервера
 	log.Println("Сервер запущен на порту", config.Port)
