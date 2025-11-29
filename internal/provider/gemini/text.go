@@ -9,7 +9,7 @@ import (
 
 func (c *Client) GenerateText(prompt string) (string, error) {
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, nil)
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: c.apiKey})
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -19,7 +19,7 @@ func (c *Client) GenerateText(prompt string) (string, error) {
 		ctx,
 		"gemini-2.5-flash",
 		genai.Text(prompt),
-		nil,
+		&genai.GenerateContentConfig{},
 	)
 	if err != nil {
 		log.Fatal(err)
