@@ -1,12 +1,9 @@
 package service
 
-type AIService struct {
-	// placeholder for provider client
-}
+import "geminiBackend/internal/provider/gemini"
 
-func NewAIService() *AIService { return &AIService{} }
+type AIService struct{ client *gemini.Client }
 
-func (s *AIService) Ask(prompt string) (string, error) {
-	// stub
-	return "stub-response", nil
-}
+func NewAIService(client *gemini.Client) *AIService { return &AIService{client: client} }
+
+func (s *AIService) AskText(prompt string) (string, error) { return s.client.GenerateText(prompt) }
