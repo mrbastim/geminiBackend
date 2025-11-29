@@ -1,29 +1,27 @@
 package config
 
 import (
-	"encoding/json"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Port      string `json:"port"`
-	ApiGemini string `json:"apiGeminiKey"`
-	JWTSecret string `json:"jwtSecret"`
+	Port      string `yaml:"port"`
+	ApiGemini string `yaml:"apiGeminiKey"`
+	JWTSecret string `yaml:"jwtSecret"`
 }
 
-func LoadConfig(filePath string) (*Config, error) {
-	file, err := os.Open(filePath)
+func LoadConfig(path string) (*Config, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-
-	config := &Config{}
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(config)
-	if err != nil {
+	defer f.Close()
+	cfg := &Config{}
+	dec := yaml.NewDecoder(f)
+	if err := dec.Decode(cfg); err != nil {
 		return nil, err
 	}
-
-	return config, nil
+	return cfg, nil
 }
