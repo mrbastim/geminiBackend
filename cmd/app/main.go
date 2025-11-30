@@ -24,6 +24,9 @@ func main() {
 	if cfg.JWTSecret == "CHANGE_ME" {
 		log.Println("Warning: default JWT secret in use")
 	}
+
+	// DB schema will be initialized in app.Run
+
 	application := app.New(cfg)
 	if err := application.Run(); err != nil {
 		log.Fatalf("server error: %v", err)

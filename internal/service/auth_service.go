@@ -1,7 +1,9 @@
 package service
 
 import (
+	"database/sql"
 	"geminiBackend/internal/domain"
+	"geminiBackend/internal/provider/db"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -17,10 +19,24 @@ func NewAuthService(secret string) *AuthService {
 
 func (s *AuthService) Login(req domain.LoginRequest) (domain.LoginResponse, error) {
 	var role string
+
+	sqlDB, err := sql.Open("sqlite3", "data/gemini.db")
+	if err != nil {
+		return domain.LoginResponse{}, err
+	}
+	userDB := db.NewUsersProvider(sqlDB)
+	defer userDB.Close()
+
+	user, err := userDB.GetUserByTelegramID(req.TgID)
+	if err != nil {
+		return domain.LoginResponse{}, domain.ErrInvalidCredentials
+	}
+
+	isAdmin := user.IsAdmin
 	switch {
-	case req.Username == "admin" && req.Password == "admin123":
+	case isAdmin:
 		role = "admin"
-	case req.Username == "user" && req.Password == "user123":
+	case !isAdmin:
 		role = "user"
 	default:
 		return domain.LoginResponse{}, domain.ErrInvalidCredentials

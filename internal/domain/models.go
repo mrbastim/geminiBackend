@@ -1,10 +1,14 @@
 package domain
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type LoginRequest struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
+	TgID     int    `json:"tg_id"`
 }
 
 type LoginResponse struct {
@@ -20,4 +24,16 @@ type Claims struct {
 type User struct {
 	Username string
 	Role     string
+}
+
+type UserDB struct {
+	ID           int64
+	TgID         int
+	Username     string
+	GeminiAPIKey string
+	IsAdmin      bool
+	IsActive     bool
+	LastLogin    time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

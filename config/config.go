@@ -8,8 +8,8 @@ import (
 
 type Config struct {
 	Port      string `yaml:"port"`
-	ApiGemini string `yaml:"apiGeminiKey"`
 	JWTSecret string `yaml:"jwtSecret"`
+	DBPath    string `yaml:"dbPath"`
 }
 
 func LoadConfig(path string) (*Config, error) {
