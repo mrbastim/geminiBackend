@@ -4,6 +4,7 @@ import (
 	stdhttp "net/http"
 
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func NewRouter(h *Handler, jwtMiddleware func(stdhttp.Handler) stdhttp.Handler, adminOnly func(stdhttp.Handler) stdhttp.Handler) *mux.Router {
@@ -19,6 +20,9 @@ func NewRouter(h *Handler, jwtMiddleware func(stdhttp.Handler) stdhttp.Handler, 
 	user.Use(jwtMiddleware)
 	user.HandleFunc("/ping", func(w stdhttp.ResponseWriter, r *stdhttp.Request) { w.Write([]byte("user pong")) }).Methods("GET")
 	user.HandleFunc("/ai/text", h.AIText).Methods("POST")
+
+	// Swagger UI (после генерации документации командой `make swagger`)
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	return r
 }

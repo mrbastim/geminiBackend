@@ -19,6 +19,16 @@ func NewHandler(auth *service.AuthService, ai *service.AIService) *Handler {
 	return &Handler{auth: auth, ai: ai}
 }
 
+// @Summary Логин
+// @Description Аутентификация пользователя и получение JWT токена
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param payload body domain.LoginRequest true "Данные для входа"
+// @Success 200 {object} domain.LoginSuccessResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Router /login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req domain.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -34,6 +44,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	log.Printf("user %s logged in", req.Username)
 }
 
+// @Summary Опции сервера
+// @Description Возвращает основные параметры конфигурации (пример)
+// @Tags admin
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.OptionsSuccessResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Router /admin/options [get]
 func (h *Handler) Options(w http.ResponseWriter, r *http.Request) {
 	config, err := config.LoadConfig("config/config.yaml")
 	if err != nil {
@@ -43,12 +61,20 @@ func (h *Handler) Options(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, map[string]string{"port": config.Port})
 }
 
-type aiTextRequest struct {
-	Prompt string `json:"prompt"`
-}
-
+// @Summary Генерация текста
+// @Description Генерирует текст по переданному prompt через Gemini
+// @Tags ai
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param payload body domain.AITextRequest true "Запрос на генерацию"
+// @Success 200 {object} domain.AITextSuccessResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Router /user/ai/text [post]
 func (h *Handler) AIText(w http.ResponseWriter, r *http.Request) {
-	var req aiTextRequest
+	var req domain.AITextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
 		return

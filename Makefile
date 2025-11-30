@@ -1,9 +1,9 @@
 APP_NAME=gemini-backend
 GO_FILES=$(shell find . -name '*.go')
 
-.PHONY: run build tidy
+.PHONY: run build tidy swagger swagger-clean
 
-run:
+run: swagger
 	go run ./cmd/app
 
 build:
@@ -11,3 +11,11 @@ build:
 
 tidy:
 	go mod tidy
+
+swagger:
+	@echo "Generating Swagger docs"
+	go install github.com/swaggo/swag/cmd/swag@latest
+	$(shell go env GOPATH)/bin/swag init -g cmd/app/main.go -o docs
+
+swagger-clean:
+	rm -rf docs

@@ -1,0 +1,158 @@
+basePath: /
+definitions:
+  domain.AITextRequest:
+    properties:
+      prompt:
+        type: string
+    type: object
+  domain.AITextResponse:
+    properties:
+      text:
+        type: string
+    type: object
+  domain.AITextSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/domain.AITextResponse'
+      status:
+        type: string
+    type: object
+  domain.ErrorDetails:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  domain.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/domain.ErrorDetails'
+      status:
+        type: string
+    type: object
+  domain.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  domain.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  domain.LoginSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/domain.LoginResponse'
+      status:
+        type: string
+    type: object
+  domain.OptionsSuccessResponse:
+    properties:
+      data:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: REST API для взаимодействия с Gemini AI и аутентификации.
+  title: Gemini Backend API
+  version: "1.0"
+paths:
+  /admin/options:
+    get:
+      description: Возвращает основные параметры конфигурации (пример)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.OptionsSuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Опции сервера
+      tags:
+      - admin
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация пользователя и получение JWT токена
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.LoginSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Логин
+      tags:
+      - auth
+  /user/ai/text:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует текст по переданному prompt через Gemini
+      parameters:
+      - description: Запрос на генерацию
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AITextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.AITextSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Генерация текста
+      tags:
+      - ai
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
