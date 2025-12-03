@@ -12,23 +12,24 @@ import (
 	"geminiBackend/config"
 	_ "geminiBackend/docs"
 	"geminiBackend/internal/app"
-	"log"
+	"geminiBackend/pkg/logger"
 )
 
 func main() {
 	cfg, err := config.LoadConfig("config/config.yaml")
-	log.Println("loading config")
+	logger.L.Info("loading config")
 	if err != nil {
-		log.Fatalf("config load error: %v", err)
+		logger.L.Error("config load error", "err", err)
+		return
 	}
 	if cfg.JWTSecret == "CHANGE_ME" {
-		log.Println("Warning: default JWT secret in use")
+		logger.L.Warn("default JWT secret in use")
 	}
 
 	// DB schema will be initialized in app.Run
 
 	application := app.New(cfg)
 	if err := application.Run(); err != nil {
-		log.Fatalf("server error: %v", err)
+		logger.L.Error("server error", "err", err)
 	}
 }

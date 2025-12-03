@@ -5,8 +5,8 @@ import (
 	"geminiBackend/config"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/service"
+	"geminiBackend/pkg/logger"
 	"geminiBackend/pkg/utils"
-	"log"
 	"net/http"
 )
 
@@ -28,6 +28,7 @@ func NewHandler(auth *service.AuthService, ai *service.AIService) *Handler {
 // @Success 200 {object} domain.LoginSuccessResponse
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
+// @Failure 429 {object} domain.ErrorResponse
 // @Router /login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req domain.LoginRequest
@@ -41,7 +42,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.Success(w, resp)
-	log.Printf("user %s logged in", req.Username)
+	logger.L.Info("user logged in", "username", req.Username)
 }
 
 // @Summary Опции сервера
@@ -72,6 +73,7 @@ func (h *Handler) Options(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
+// @Failure 429 {object} domain.ErrorResponse
 // @Router /user/ai/text [post]
 func (h *Handler) AIText(w http.ResponseWriter, r *http.Request) {
 	var req domain.AITextRequest
