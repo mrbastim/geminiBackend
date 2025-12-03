@@ -32,7 +32,7 @@ func (a *App) Run() error {
 	// You may want to close DB on shutdown; omitted for brevity
 
 	// Providers and services
-	authService := service.NewAuthService(a.cfg.JWTSecret)
+	authService := service.NewAuthService(a.cfg.JWTSecret, sqlDB)
 	apiKey := os.Getenv("API_GEMINI_KEY")
 	gemClient := gemini.NewClient(apiKey)
 	aiService := service.NewAIService(gemClient)

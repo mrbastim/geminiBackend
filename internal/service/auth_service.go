@@ -11,35 +11,34 @@ import (
 
 type AuthService struct {
 	jwtSecret string
+	db        *sql.DB
 }
 
-func NewAuthService(secret string) *AuthService {
-	return &AuthService{jwtSecret: secret}
+func NewAuthService(secret string, database *sql.DB) *AuthService {
+	return &AuthService{jwtSecret: secret, db: database}
 }
 
 func (s *AuthService) Login(req domain.LoginRequest) (domain.LoginResponse, error) {
-	var role string
-
-	sqlDB, err := sql.Open("sqlite3", "data/gemini.db")
-	if err != nil {
-		return domain.LoginResponse{}, err
+	if req.TgID <= 0 {
+		return domain.LoginResponse{}, domain.ErrInvalidCredentials
 	}
-	userDB := db.NewUsersProvider(sqlDB)
-	defer userDB.Close()
+
+	userDB := db.NewUsersProvider(s.db)
 
 	user, err := userDB.GetUserByTelegramID(req.TgID)
 	if err != nil {
 		return domain.LoginResponse{}, domain.ErrInvalidCredentials
 	}
 
-	isAdmin := user.IsAdmin
-	switch {
-	case isAdmin:
-		role = "admin"
-	case !isAdmin:
-		role = "user"
-	default:
+	if !user.IsActive {
 		return domain.LoginResponse{}, domain.ErrInvalidCredentials
+	}
+
+	var role string
+	if user.IsAdmin {
+		role = "admin"
+	} else {
+		role = "user"
 	}
 	exp := time.Now().Add(1 * time.Hour)
 	claims := &domain.Claims{Username: req.Username, Role: role, RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(exp), IssuedAt: jwt.NewNumericDate(time.Now())}}

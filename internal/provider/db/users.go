@@ -14,10 +14,6 @@ func NewUsersProvider(db *sql.DB) *UsersProvider {
 	return &UsersProvider{db: db}
 }
 
-func (p *UsersProvider) Close() error {
-	return p.db.Close()
-}
-
 // Upsert пользователя по tg_id (создаёт или обновляет username, last_login)
 func (p *UsersProvider) UpsertTelegramUser(tgID int, username string) error {
 	now := time.Now().Format(time.RFC3339)
