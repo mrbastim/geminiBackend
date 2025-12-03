@@ -14,7 +14,6 @@ func (c *Client) GenerateText(prompt string) (string, error) {
 		log.Printf("failed to create genai client: %v", err)
 		return "", err
 	}
-	defer client.Close()
 
 	result, err := client.Models.GenerateContent(
 		ctx,
