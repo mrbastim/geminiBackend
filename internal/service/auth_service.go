@@ -43,7 +43,7 @@ func (s *AuthService) Login(req domain.LoginRequest) (domain.LoginResponse, erro
 		role = "user"
 	}
 	exp := time.Now().Add(1 * time.Hour)
-	claims := &domain.Claims{Username: req.Username, Role: role, RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(exp), IssuedAt: jwt.NewNumericDate(time.Now())}}
+	claims := &domain.Claims{Username: req.Username, Role: role, TgID: user.TgID, RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(exp), IssuedAt: jwt.NewNumericDate(time.Now())}}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(s.jwtSecret))
 	if err != nil {

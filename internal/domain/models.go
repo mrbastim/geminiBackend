@@ -18,6 +18,7 @@ type LoginResponse struct {
 type Claims struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
+	TgID     int    `json:"tg_id"`
 	jwt.RegisteredClaims
 }
 
@@ -36,4 +37,14 @@ type UserDB struct {
 	LastLogin    sql.NullTime
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
+}
+
+// SetKeyRequest запрос на установку/смену ключа Gemini
+type SetKeyRequest struct {
+	APIKey string `json:"api_key"`
+}
+
+// KeyStatusResponse ответ со статусом наличия ключа
+type KeyStatusResponse struct {
+	HasKey bool `json:"has_key"`
 }

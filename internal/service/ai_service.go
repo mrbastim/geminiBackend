@@ -2,8 +2,11 @@ package service
 
 import "geminiBackend/internal/provider/gemini"
 
-type AIService struct{ client *gemini.Client }
+type AIService struct{}
 
-func NewAIService(client *gemini.Client) *AIService { return &AIService{client: client} }
+func NewAIService() *AIService { return &AIService{} }
 
-func (s *AIService) AskText(prompt string) (string, error) { return s.client.GenerateText(prompt) }
+func (s *AIService) AskText(apiKey, prompt string) (string, error) {
+	client := gemini.NewClient(apiKey)
+	return client.GenerateText(prompt)
+}

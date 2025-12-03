@@ -53,6 +53,16 @@ func (p *UsersProvider) SetGeminiAPIKey(tgID int, apiKey string) error {
 	return err
 }
 
+// ClearGeminiAPIKey устанавливает gemini_api_key = NULL для пользователя
+func (p *UsersProvider) ClearGeminiAPIKey(tgID int) error {
+	_, err := p.db.Exec(`
+		UPDATE users
+		SET gemini_api_key = NULL, updated_at = CURRENT_TIMESTAMP
+		WHERE tg_id = ?
+	`, tgID)
+	return err
+}
+
 // SetAdmin устанавливает или обновляет статус администратора для пользователя по tg_id
 func (p *UsersProvider) SetAdmin(tgID int, isAdmin bool) error {
 	_, err := p.db.Exec(`

@@ -40,3 +40,9 @@ func RequireAdmin(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// ClaimsFromContext возвращает клеймы из контекста, если они есть
+func ClaimsFromContext(ctx context.Context) (*domain.Claims, bool) {
+	c, ok := ctx.Value(claimsKey{}).(*domain.Claims)
+	return c, ok
+}

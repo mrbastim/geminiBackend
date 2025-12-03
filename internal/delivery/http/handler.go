@@ -1,9 +1,12 @@
 package http
 
 import (
+	"database/sql"
 	"encoding/json"
 	"geminiBackend/config"
+	"geminiBackend/internal/delivery/http/middleware"
 	"geminiBackend/internal/domain"
+	"geminiBackend/internal/provider/db"
 	"geminiBackend/internal/service"
 	"geminiBackend/pkg/logger"
 	"geminiBackend/pkg/utils"
@@ -13,10 +16,11 @@ import (
 type Handler struct {
 	auth *service.AuthService
 	ai   *service.AIService
+	db   *sql.DB
 }
 
-func NewHandler(auth *service.AuthService, ai *service.AIService) *Handler {
-	return &Handler{auth: auth, ai: ai}
+func NewHandler(auth *service.AuthService, ai *service.AIService, database *sql.DB) *Handler {
+	return &Handler{auth: auth, ai: ai, db: database}
 }
 
 // @Summary Логин
@@ -85,10 +89,105 @@ func (h *Handler) AIText(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusBadRequest, "validation_error", "prompt required")
 		return
 	}
-	text, err := h.ai.AskText(req.Prompt)
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		return
+	}
+	users := db.NewUsersProvider(h.db)
+	user, err := users.GetUserByTelegramID(claims.TgID)
+	if err != nil {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized", "user not found")
+		return
+	}
+	if !user.GeminiAPIKey.Valid || user.GeminiAPIKey.String == "" {
+		utils.Error(w, http.StatusBadRequest, "missing_api_key", "set your Gemini API key first")
+		return
+	}
+	text, err := h.ai.AskText(user.GeminiAPIKey.String, req.Prompt)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "ai_error", err.Error())
 		return
 	}
 	utils.Success(w, map[string]string{"text": text})
+}
+
+// @Summary Установить ключ Gemini
+// @Description Сохраняет пользовательский Gemini API ключ (перезаписывает существующий)
+// @Tags ai
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param payload body domain.SetKeyRequest true "Ключ Gemini"
+// @Success 200 {object} domain.OptionsSuccessResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Failure 429 {object} domain.ErrorResponse
+// @Router /user/ai/key [post]
+func (h *Handler) AISetKey(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		return
+	}
+	var req domain.SetKeyRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
+		return
+	}
+	if len(req.APIKey) < 10 { // простая валидация длины
+		utils.Error(w, http.StatusBadRequest, "validation_error", "api_key too short")
+		return
+	}
+	users := db.NewUsersProvider(h.db)
+	if err := users.SetGeminiAPIKey(claims.TgID, req.APIKey); err != nil {
+		utils.Error(w, http.StatusInternalServerError, "db_error", err.Error())
+		return
+	}
+	logger.L.Info("user set gemini key", "tg_id", claims.TgID)
+	utils.Success(w, map[string]string{"status": "ok"})
+}
+
+// @Summary Удалить ключ Gemini
+// @Tags ai
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.OptionsSuccessResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Router /user/ai/key [delete]
+func (h *Handler) AIClearKey(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		return
+	}
+	users := db.NewUsersProvider(h.db)
+	if err := users.ClearGeminiAPIKey(claims.TgID); err != nil {
+		utils.Error(w, http.StatusInternalServerError, "db_error", err.Error())
+		return
+	}
+	logger.L.Info("user cleared gemini key", "tg_id", claims.TgID)
+	utils.Success(w, map[string]string{"status": "ok"})
+}
+
+// @Summary Статус ключа Gemini
+// @Tags ai
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.KeyStatusResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Router /user/ai/key [get]
+func (h *Handler) AIKeyStatus(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		return
+	}
+	users := db.NewUsersProvider(h.db)
+	user, err := users.GetUserByTelegramID(claims.TgID)
+	if err != nil {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized", "user not found")
+		return
+	}
+	utils.Success(w, domain.KeyStatusResponse{HasKey: user.GeminiAPIKey.Valid && user.GeminiAPIKey.String != ""})
 }

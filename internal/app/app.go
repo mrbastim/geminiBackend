@@ -6,7 +6,6 @@ import (
 	delivery "geminiBackend/internal/delivery/http"
 	"geminiBackend/internal/delivery/http/middleware"
 	"geminiBackend/internal/provider/db"
-	"geminiBackend/internal/provider/gemini"
 	"geminiBackend/internal/service"
 	"geminiBackend/pkg/logger"
 	"net/http"
@@ -37,10 +36,9 @@ func (a *App) Run() error {
 
 	// Providers and services
 	authService := service.NewAuthService(a.cfg.JWTSecret, sqlDB)
-	apiKey := os.Getenv("API_GEMINI_KEY")
-	gemClient := gemini.NewClient(apiKey)
-	aiService := service.NewAIService(gemClient)
-	handler := delivery.NewHandler(authService, aiService)
+	// AI service now uses per-user API keys
+	aiService := service.NewAIService()
+	handler := delivery.NewHandler(authService, aiService, sqlDB)
 	// Rate limiters
 	rl := middleware.NewIPRateLimiter(10, time.Minute) // 10 requests per minute per IP
 	router := delivery.NewRouter(handler, middleware.JWT(authService), middleware.RequireAdmin, rl)

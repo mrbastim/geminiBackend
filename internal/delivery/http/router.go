@@ -22,6 +22,9 @@ func NewRouter(h *Handler, jwtMiddleware func(stdhttp.Handler) stdhttp.Handler, 
 	user.Use(jwtMiddleware)
 	user.HandleFunc("/ping", func(w stdhttp.ResponseWriter, r *stdhttp.Request) { w.Write([]byte("user pong")) }).Methods("GET")
 	user.Handle("/ai/text", rl.Limit(stdhttp.HandlerFunc(h.AIText))).Methods("POST")
+	user.Handle("/ai/key", rl.Limit(stdhttp.HandlerFunc(h.AISetKey))).Methods("POST")
+	user.Handle("/ai/key", rl.Limit(stdhttp.HandlerFunc(h.AIClearKey))).Methods("DELETE")
+	user.Handle("/ai/key", rl.Limit(stdhttp.HandlerFunc(h.AIKeyStatus))).Methods("GET")
 
 	// Swagger UI (после генерации документации командой `make swagger`)
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
