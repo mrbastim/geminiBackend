@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/provider/db"
+	"geminiBackend/pkg/logger"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -27,15 +28,16 @@ func (s *AuthService) Login(req domain.LoginRequest) (domain.LoginResponse, erro
 
 	user, err := userDB.GetUserByTelegramID(req.TgID)
 	if err != nil {
+		logger.L.Error("get user error", "tg_id", req.TgID, "err", err)
 		return domain.LoginResponse{}, domain.ErrInvalidCredentials
 	}
 
-	if !user.IsActive {
+	if user.IsActive == 0 {
 		return domain.LoginResponse{}, domain.ErrInvalidCredentials
 	}
 
 	var role string
-	if user.IsAdmin {
+	if user.IsAdmin == 1 {
 		role = "admin"
 	} else {
 		role = "user"

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"time"
+	"database/sql"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -30,10 +30,10 @@ type UserDB struct {
 	ID           int64
 	TgID         int
 	Username     string
-	GeminiAPIKey string
-	IsAdmin      bool
-	IsActive     bool
-	LastLogin    time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	GeminiAPIKey sql.NullString
+	IsAdmin      int
+	IsActive     int
+	LastLogin    sql.NullTime
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
 }
