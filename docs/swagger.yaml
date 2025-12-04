@@ -31,10 +31,15 @@ definitions:
       status:
         type: string
     type: object
+  domain.KeyStatusResponse:
+    properties:
+      has_key:
+        type: boolean
+    type: object
   domain.LoginRequest:
     properties:
-      password:
-        type: string
+      tg_id:
+        type: integer
       username:
         type: string
     type: object
@@ -57,6 +62,11 @@ definitions:
           type: string
         type: object
       status:
+        type: string
+    type: object
+  domain.SetKeyRequest:
+    properties:
+      api_key:
         type: string
     type: object
 info:
@@ -111,9 +121,83 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
       summary: Логин
       tags:
       - auth
+  /user/ai/key:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.OptionsSuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удалить ключ Gemini
+      tags:
+      - ai
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.KeyStatusResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Статус ключа Gemini
+      tags:
+      - ai
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет пользовательский Gemini API ключ (перезаписывает существующий)
+      parameters:
+      - description: Ключ Gemini
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SetKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.OptionsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Установить ключ Gemini
+      tags:
+      - ai
   /user/ai/text:
     post:
       consumes:
@@ -139,6 +223,10 @@ paths:
             $ref: '#/definitions/domain.ErrorResponse'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Too Many Requests
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
