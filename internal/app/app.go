@@ -22,7 +22,6 @@ type App struct {
 func New(cfg *config.Config) *App { return &App{cfg: cfg} }
 
 func (a *App) Run() error {
-	// Init SQLite DB and ensure schema
 	dbPath := a.cfg.DBPath
 	if dbPath == "" {
 		dbPath = "data.db"
@@ -32,15 +31,13 @@ func (a *App) Run() error {
 		return err
 	}
 	defer sqlDB.Close()
-	// You may want to close DB on shutdown; omitted for brevity
 
 	// Providers and services
 	authService := service.NewAuthService(a.cfg.JWTSecret, sqlDB)
-	// AI service now uses per-user API keys
 	aiService := service.NewAIService()
 	handler := delivery.NewHandler(authService, aiService, sqlDB)
 	// Rate limiters
-	rl := middleware.NewIPRateLimiter(10, time.Minute) // 10 requests per minute per IP
+	rl := middleware.NewIPRateLimiter(10, time.Minute)
 	router := delivery.NewRouter(handler, middleware.JWT(authService), middleware.RequireAdmin, rl)
 
 	srv := &http.Server{Addr: ":" + a.cfg.Port, Handler: router}
