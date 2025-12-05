@@ -12,6 +12,7 @@ import (
 func NewRouter(h *Handler, jwtMiddleware func(stdhttp.Handler) stdhttp.Handler, adminOnly func(stdhttp.Handler) stdhttp.Handler, rl middleware.RateLimiter) *mux.Router {
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
 	r.Handle("/login", rl.Limit(stdhttp.HandlerFunc(h.Login))).Methods("POST")
+	r.Handle("/register", rl.Limit(stdhttp.HandlerFunc(h.Register))).Methods("POST")
 	// protected example
 	secure := r.PathPrefix("/admin").Subrouter()
 	secure.Use(jwtMiddleware, adminOnly)

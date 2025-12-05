@@ -19,7 +19,7 @@ func main() {
 	cfg, err := config.LoadConfig("config/config.yaml")
 	logger.L.Info("loading config")
 	if err != nil {
-		logger.L.Error("config load error", "err", err)
+		logger.L.Error("config load error. Check config file.", "err", err)
 		return
 	}
 	if cfg.JWTSecret == "CHANGE_ME" {

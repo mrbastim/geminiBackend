@@ -49,7 +49,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.Success(w, resp)
-	logger.L.Info("new user registered", "username", req.Username)
+	logger.L.Debug("new user registered", "username", req.Username)
 }
 
 // @Summary Логин
@@ -75,7 +75,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.Success(w, resp)
-	logger.L.Info("user logged in", "username", req.Username)
+	logger.L.Debug("user logged in", "username", req.Username)
 }
 
 // @Summary Опции сервера
@@ -173,7 +173,7 @@ func (h *Handler) AISetKey(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusInternalServerError, "db_error", err.Error())
 		return
 	}
-	logger.L.Info("user set gemini key", "tg_id", claims.TgID)
+	logger.L.Debug("user set gemini key", "tg_id", claims.TgID)
 	utils.Success(w, map[string]string{"status": "ok"})
 }
 
@@ -195,7 +195,7 @@ func (h *Handler) AIClearKey(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusInternalServerError, "db_error", err.Error())
 		return
 	}
-	logger.L.Info("user cleared gemini key", "tg_id", claims.TgID)
+	logger.L.Debug("user cleared gemini key", "tg_id", claims.TgID)
 	utils.Success(w, map[string]string{"status": "ok"})
 }
 
