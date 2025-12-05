@@ -11,8 +11,17 @@ type LoginRequest struct {
 	TgID     int    `json:"tg_id"`
 }
 
+type RegisterRequest struct {
+	Username string `json:"username"`
+	TgID     int    `json:"tg_id"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
+}
+
+type RegisterResponse struct {
+	Message string `json:"message"`
 }
 
 type Claims struct {

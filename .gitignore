@@ -1,3 +1,5 @@
 config/config.yaml
 server
+server.exe
 data.db
+go.sum

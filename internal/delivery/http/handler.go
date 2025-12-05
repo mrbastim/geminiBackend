@@ -23,13 +23,42 @@ func NewHandler(auth *service.AuthService, ai *service.AIService, database *sql.
 	return &Handler{auth: auth, ai: ai, db: database}
 }
 
+// @Summary Регистрация
+// @Description Регистрация нового пользователя
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param payload body domain.RegisterRequest true "Данные для регистрации"
+// @Success 200 {object} domain.RegisterResponse
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Router /register [post]
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+	var req domain.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
+		return
+	}
+	resp, err := h.auth.Register(req)
+	if err != nil {
+		if err == domain.ErrUserExists {
+			utils.Error(w, http.StatusBadRequest, "user_exists", err.Error())
+			return
+		}
+		utils.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
+		return
+	}
+	utils.Success(w, resp)
+	logger.L.Info("new user registered", "username", req.Username)
+}
+
 // @Summary Логин
 // @Description Аутентификация пользователя и получение JWT токена
 // @Tags auth
 // @Accept json
 // @Produce json
 // @Param payload body domain.LoginRequest true "Данные для входа"
-// @Success 200 {object} domain.LoginSuccessResponse
+// @Success 200 {object} domain.LoginResponse
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 429 {object} domain.ErrorResponse

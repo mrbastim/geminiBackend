@@ -19,6 +19,28 @@ func NewAuthService(secret string, database *sql.DB) *AuthService {
 	return &AuthService{jwtSecret: secret, db: database}
 }
 
+func (s *AuthService) Register(req domain.RegisterRequest) (domain.RegisterResponse, error) {
+	if req.TgID <= 0 || req.Username == "" {
+		return domain.RegisterResponse{}, domain.ErrInvalidInput
+	}
+	userDB := db.NewUsersProvider(s.db)
+
+	_, err := userDB.GetUserByTelegramID(req.TgID)
+	if err == nil {
+		return domain.RegisterResponse{Message: domain.ErrUserExists.Error()}, domain.ErrUserExists
+	}
+	newUser := domain.UserDB{
+		Username: req.Username,
+		TgID:     req.TgID,
+		IsActive: 1,
+		IsAdmin:  0,
+	}
+	if err := userDB.UpsertTelegramUser(newUser.TgID, newUser.Username); err != nil {
+		return domain.RegisterResponse{}, err
+	}
+	return domain.RegisterResponse{Message: "user registered successfully"}, nil
+}
+
 func (s *AuthService) Login(req domain.LoginRequest) (domain.LoginResponse, error) {
 	if req.TgID <= 0 {
 		return domain.LoginResponse{}, domain.ErrInvalidCredentials
