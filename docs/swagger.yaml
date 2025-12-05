@@ -48,13 +48,6 @@ definitions:
       token:
         type: string
     type: object
-  domain.LoginSuccessResponse:
-    properties:
-      data:
-        $ref: '#/definitions/domain.LoginResponse'
-      status:
-        type: string
-    type: object
   domain.OptionsSuccessResponse:
     properties:
       data:
@@ -62,6 +55,18 @@ definitions:
           type: string
         type: object
       status:
+        type: string
+    type: object
+  domain.RegisterRequest:
+    properties:
+      tg_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  domain.RegisterResponse:
+    properties:
+      message:
         type: string
     type: object
   domain.SetKeyRequest:
@@ -112,7 +117,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.LoginSuccessResponse'
+            $ref: '#/definitions/domain.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -126,6 +131,36 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       summary: Логин
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрация нового пользователя
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Регистрация
       tags:
       - auth
   /user/ai/key:
