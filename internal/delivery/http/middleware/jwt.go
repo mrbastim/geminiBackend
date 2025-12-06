@@ -1,48 +1,65 @@
 package middleware
 
 import (
-	"context"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/service"
+	"geminiBackend/pkg/utils"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
-type claimsKey struct{}
+const ClaimsContextKey = "claims"
 
-func JWT(auth *service.AuthService) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			header := r.Header.Get("Authorization")
-			parts := strings.Split(header, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				http.Error(w, "invalid auth header", http.StatusUnauthorized)
-				return
-			}
-			claims, err := auth.Parse(parts[1])
-			if err != nil {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
-				return
-			}
-			ctx := context.WithValue(r.Context(), claimsKey{}, claims)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
+func JWTAuth(auth *service.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		header := c.GetHeader("Authorization")
+		parts := strings.Split(header, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			utils.Error(c.Writer, http.StatusUnauthorized, "auth_error", "invalid auth header format")
+			c.Abort()
+			return
+		}
+
+		claims, err := auth.Parse(parts[1])
+		if err != nil {
+			utils.Error(c.Writer, http.StatusUnauthorized, "invalid_token", "invalid or expired token")
+			c.Abort()
+			return
+		}
+
+		c.Set(ClaimsContextKey, claims)
+		c.Next()
 	}
 }
 
-func RequireAdmin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, ok := r.Context().Value(claimsKey{}).(*domain.Claims)
-		if !ok || c.Role != "admin" {
-			http.Error(w, "admin required", http.StatusForbidden)
+func AdminOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, exists := c.Get(ClaimsContextKey)
+		if !exists {
+			utils.Error(c.Writer, http.StatusForbidden, "no_claims", "claims not found in context")
+			c.Abort()
 			return
 		}
-		next.ServeHTTP(w, r)
-	})
+
+		userClaims, ok := claims.(*domain.Claims)
+		if !ok || userClaims.Role != "admin" {
+			utils.Error(c.Writer, http.StatusForbidden, "forbidden", "admin access required")
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
 }
 
-// ClaimsFromContext возвращает клеймы из контекста, если они есть
-func ClaimsFromContext(ctx context.Context) (*domain.Claims, bool) {
-	c, ok := ctx.Value(claimsKey{}).(*domain.Claims)
-	return c, ok
+// ClaimsFromContext возвращает клеймы из Gin контекста
+func ClaimsFromContext(c *gin.Context) (*domain.Claims, bool) {
+	claims, exists := c.Get(ClaimsContextKey)
+	if !exists {
+		return nil, false
+	}
+	userClaims, ok := claims.(*domain.Claims)
+	return userClaims, ok
 }

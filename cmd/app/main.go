@@ -16,17 +16,17 @@ import (
 )
 
 func main() {
-	cfg, err := config.LoadConfig("config/config.yaml")
-	logger.L.Info("loading config")
-	if err != nil {
-		logger.L.Error("config load error. Check config file.", "err", err)
-		return
+	cfg := config.LoadConfig()
+	logger.L.Info("loading config", "env", cfg.Env)
+
+	if cfg.JWTSecret == "change-me-in-production" {
+		logger.L.Warn("warning: default JWT secret in use")
 	}
-	if cfg.JWTSecret == "CHANGE_ME" {
-		logger.L.Warn("default JWT secret in use")
+	if cfg.ApiGemini == "" {
+		logger.L.Warn("warning: GEMINI_API_KEY not set")
 	}
 
-	// DB schema will be initialized in app.Run
+	logger.L.Info("starting application", "env", cfg.Env, "port", cfg.Port)
 
 	application := app.New(cfg)
 	if err := application.Run(); err != nil {

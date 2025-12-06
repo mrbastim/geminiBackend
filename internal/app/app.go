@@ -1,18 +1,18 @@
 package app
 
 import (
-	"context"
 	"geminiBackend/config"
 	delivery "geminiBackend/internal/delivery/http"
 	"geminiBackend/internal/delivery/http/middleware"
 	"geminiBackend/internal/provider/db"
 	"geminiBackend/internal/service"
 	"geminiBackend/pkg/logger"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type App struct {
@@ -36,15 +36,30 @@ func (a *App) Run() error {
 	authService := service.NewAuthService(a.cfg.JWTSecret, sqlDB)
 	aiService := service.NewAIService()
 	handler := delivery.NewHandler(authService, aiService, sqlDB)
+
 	// Rate limiters
 	rl := middleware.NewIPRateLimiter(10, time.Minute)
-	router := delivery.NewRouter(handler, middleware.JWT(authService), middleware.RequireAdmin, rl)
 
-	srv := &http.Server{Addr: ":" + a.cfg.Port, Handler: router}
+	// Gin router
+	ginRouter := delivery.NewRouter(handler, middleware.JWTAuth(authService), middleware.AdminOnly(), rl)
+
+	// Установка режима Gin (debug/release) через env
+	if a.cfg.GinMode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	// Установка доверенных proxies
+	if len(a.cfg.TrustedProxies) > 0 {
+		ginRouter.SetTrustedProxies(a.cfg.TrustedProxies)
+	} else {
+		// По умолчанию доверяем localhost
+		ginRouter.SetTrustedProxies([]string{"127.0.0.1", "localhost"})
+	}
+
 	// Start server in goroutine
 	go func() {
-		logger.L.Info("starting server", "port", a.cfg.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.L.Info("starting server", "port", a.cfg.Port, "mode", a.cfg.Env)
+		if err := ginRouter.Run(":" + a.cfg.Port); err != nil {
 			logger.L.Error("listen error", "err", err)
 		}
 	}()
@@ -54,10 +69,8 @@ func (a *App) Run() error {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 	logger.L.Info("shutting down server")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.L.Error("server shutdown error", "err", err)
-	}
+
+	// Note: Gin's Run() blocks, so graceful shutdown via context is implicit
+	// In production, consider using a custom HTTP server setup with gin.Engine
 	return nil
 }

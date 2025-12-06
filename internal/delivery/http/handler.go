@@ -2,8 +2,6 @@ package http
 
 import (
 	"database/sql"
-	"encoding/json"
-	"geminiBackend/config"
 	"geminiBackend/internal/delivery/http/middleware"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/provider/db"
@@ -11,6 +9,8 @@ import (
 	"geminiBackend/pkg/logger"
 	"geminiBackend/pkg/utils"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
@@ -33,22 +33,22 @@ func NewHandler(auth *service.AuthService, ai *service.AIService, database *sql.
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
 // @Router /register [post]
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Register(c *gin.Context) {
 	var req domain.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c.Writer, http.StatusBadRequest, "bad_request", "invalid body")
 		return
 	}
 	resp, err := h.auth.Register(req)
 	if err != nil {
 		if err == domain.ErrUserExists {
-			utils.Error(w, http.StatusBadRequest, "user_exists", err.Error())
+			utils.Error(c.Writer, http.StatusBadRequest, "user_exists", err.Error())
 			return
 		}
-		utils.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
+		utils.Error(c.Writer, http.StatusInternalServerError, "internal_error", err.Error())
 		return
 	}
-	utils.Success(w, resp)
+	utils.Success(c.Writer, resp)
 	logger.L.Debug("new user registered", "username", req.Username)
 }
 
@@ -63,18 +63,18 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 429 {object} domain.ErrorResponse
 // @Router /login [post]
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(c *gin.Context) {
 	var req domain.LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c.Writer, http.StatusBadRequest, "bad_request", "invalid body")
 		return
 	}
 	resp, err := h.auth.Login(req)
 	if err != nil {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", err.Error())
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", err.Error())
 		return
 	}
-	utils.Success(w, resp)
+	utils.Success(c.Writer, resp)
 	logger.L.Debug("user logged in", "username", req.Username)
 }
 
@@ -86,13 +86,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} domain.OptionsSuccessResponse
 // @Failure 500 {object} domain.ErrorResponse
 // @Router /admin/options [get]
-func (h *Handler) Options(w http.ResponseWriter, r *http.Request) {
-	config, err := config.LoadConfig("config/config.yaml")
-	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, "config_error", "failed to load config")
-		return
-	}
-	utils.Success(w, map[string]string{"port": config.Port})
+func (h *Handler) Options(c *gin.Context) {
+	utils.Success(c.Writer, map[string]string{"status": "ok"})
 }
 
 // @Summary Генерация текста
@@ -108,37 +103,37 @@ func (h *Handler) Options(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} domain.ErrorResponse
 // @Failure 429 {object} domain.ErrorResponse
 // @Router /user/ai/text [post]
-func (h *Handler) AIText(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AIText(c *gin.Context) {
 	var req domain.AITextRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c.Writer, http.StatusBadRequest, "bad_request", "invalid body")
 		return
 	}
 	if req.Prompt == "" {
-		utils.Error(w, http.StatusBadRequest, "validation_error", "prompt required")
+		utils.Error(c.Writer, http.StatusBadRequest, "validation_error", "prompt required")
 		return
 	}
-	claims, ok := middleware.ClaimsFromContext(r.Context())
+	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
 	if !ok {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
 	}
 	users := db.NewUsersProvider(h.db)
 	user, err := users.GetUserByTelegramID(claims.TgID)
 	if err != nil {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", "user not found")
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "user not found")
 		return
 	}
 	if !user.GeminiAPIKey.Valid || user.GeminiAPIKey.String == "" {
-		utils.Error(w, http.StatusBadRequest, "missing_api_key", "set your Gemini API key first")
+		utils.Error(c.Writer, http.StatusBadRequest, "missing_api_key", "set your Gemini API key first")
 		return
 	}
 	text, err := h.ai.AskText(user.GeminiAPIKey.String, req.Prompt)
 	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, "ai_error", err.Error())
+		utils.Error(c.Writer, http.StatusInternalServerError, "ai_error", err.Error())
 		return
 	}
-	utils.Success(w, map[string]string{"text": text})
+	utils.Success(c.Writer, map[string]string{"text": text})
 }
 
 // @Summary Установить ключ Gemini
@@ -153,28 +148,28 @@ func (h *Handler) AIText(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 429 {object} domain.ErrorResponse
 // @Router /user/ai/key [post]
-func (h *Handler) AISetKey(w http.ResponseWriter, r *http.Request) {
-	claims, ok := middleware.ClaimsFromContext(r.Context())
+func (h *Handler) AISetKey(c *gin.Context) {
+	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
 	if !ok {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
 	}
 	var req domain.SetKeyRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.Error(w, http.StatusBadRequest, "bad_request", "invalid body")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c.Writer, http.StatusBadRequest, "bad_request", "invalid body")
 		return
 	}
 	if len(req.APIKey) < 10 { // простая валидация длины
-		utils.Error(w, http.StatusBadRequest, "validation_error", "api_key too short")
+		utils.Error(c.Writer, http.StatusBadRequest, "validation_error", "api_key too short")
 		return
 	}
 	users := db.NewUsersProvider(h.db)
 	if err := users.SetGeminiAPIKey(claims.TgID, req.APIKey); err != nil {
-		utils.Error(w, http.StatusInternalServerError, "db_error", err.Error())
+		utils.Error(c.Writer, http.StatusInternalServerError, "db_error", err.Error())
 		return
 	}
 	logger.L.Debug("user set gemini key", "tg_id", claims.TgID)
-	utils.Success(w, map[string]string{"status": "ok"})
+	utils.Success(c.Writer, map[string]string{"status": "ok"})
 }
 
 // @Summary Удалить ключ Gemini
@@ -184,19 +179,19 @@ func (h *Handler) AISetKey(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} domain.OptionsSuccessResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Router /user/ai/key [delete]
-func (h *Handler) AIClearKey(w http.ResponseWriter, r *http.Request) {
-	claims, ok := middleware.ClaimsFromContext(r.Context())
+func (h *Handler) AIClearKey(c *gin.Context) {
+	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
 	if !ok {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
 	}
 	users := db.NewUsersProvider(h.db)
 	if err := users.ClearGeminiAPIKey(claims.TgID); err != nil {
-		utils.Error(w, http.StatusInternalServerError, "db_error", err.Error())
+		utils.Error(c.Writer, http.StatusInternalServerError, "db_error", err.Error())
 		return
 	}
 	logger.L.Debug("user cleared gemini key", "tg_id", claims.TgID)
-	utils.Success(w, map[string]string{"status": "ok"})
+	utils.Success(c.Writer, map[string]string{"status": "ok"})
 }
 
 // @Summary Статус ключа Gemini
@@ -206,17 +201,25 @@ func (h *Handler) AIClearKey(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} domain.KeyStatusResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Router /user/ai/key [get]
-func (h *Handler) AIKeyStatus(w http.ResponseWriter, r *http.Request) {
-	claims, ok := middleware.ClaimsFromContext(r.Context())
+func (h *Handler) AIKeyStatus(c *gin.Context) {
+	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
 	if !ok {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", "no claims")
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
 	}
 	users := db.NewUsersProvider(h.db)
 	user, err := users.GetUserByTelegramID(claims.TgID)
 	if err != nil {
-		utils.Error(w, http.StatusUnauthorized, "unauthorized", "user not found")
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "user not found")
 		return
 	}
-	utils.Success(w, domain.KeyStatusResponse{HasKey: user.GeminiAPIKey.Valid && user.GeminiAPIKey.String != ""})
+	utils.Success(c.Writer, domain.KeyStatusResponse{HasKey: user.GeminiAPIKey.Valid && user.GeminiAPIKey.String != ""})
+}
+
+func (h *Handler) AdminPing(c *gin.Context) {
+	utils.Success(c.Writer, map[string]string{"message": "pong from admin"})
+}
+
+func (h *Handler) UserPing(c *gin.Context) {
+	utils.Success(c.Writer, map[string]string{"message": "pong from user"})
 }
