@@ -92,7 +92,7 @@ func clientIP(r *http.Request) string {
 }
 
 func clientIPGin(c *gin.Context) string {
-	// Trust X-Forwarded-For first, else RemoteAddr
+	// Доверяем X-Forwarded-For в первую очередь, иначе RemoteAddr
 	if xff := c.GetHeader("X-Forwarded-For"); xff != "" {
 		return xff
 	}

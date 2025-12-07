@@ -3,8 +3,11 @@ server
 server.exe
 data.db
 go.sum
+server.log
+tests/test_*.db
 
 # Environment variables (local only)
 .env
+.env.test
 .env.local
 .env.*.local

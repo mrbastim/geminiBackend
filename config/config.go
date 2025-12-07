@@ -15,6 +15,8 @@ type Config struct {
 	Env            string   `yaml:"env"`            // dev, release
 	GinMode        string   `yaml:"ginMode"`        // debug, release
 	TrustedProxies []string `yaml:"trustedProxies"` // список доверенных IP/сетей
+	LogLevel       string   `yaml:"logLevel"`       // debug, info, warn, error
+	LogFile        string   `yaml:"logFile"`        // путь к файлу логов (если пусто - логи в stdout)
 }
 
 func LoadConfig() *Config {

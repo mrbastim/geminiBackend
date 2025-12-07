@@ -113,7 +113,7 @@ func (h *Handler) AIText(c *gin.Context) {
 		utils.Error(c.Writer, http.StatusBadRequest, "validation_error", "prompt required")
 		return
 	}
-	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
+	claims, ok := middleware.ClaimsFromContext(c)
 	if !ok {
 		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
@@ -149,7 +149,7 @@ func (h *Handler) AIText(c *gin.Context) {
 // @Failure 429 {object} domain.ErrorResponse
 // @Router /user/ai/key [post]
 func (h *Handler) AISetKey(c *gin.Context) {
-	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
+	claims, ok := middleware.ClaimsFromContext(c)
 	if !ok {
 		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
@@ -159,7 +159,11 @@ func (h *Handler) AISetKey(c *gin.Context) {
 		utils.Error(c.Writer, http.StatusBadRequest, "bad_request", "invalid body")
 		return
 	}
-	if len(req.APIKey) < 10 { // простая валидация длины
+	if req.APIKey == "" {
+		utils.Error(c.Writer, http.StatusBadRequest, "validation_error", "api_key cannot be empty")
+		return
+	}
+	if len(req.APIKey) < 10 {
 		utils.Error(c.Writer, http.StatusBadRequest, "validation_error", "api_key too short")
 		return
 	}
@@ -180,7 +184,7 @@ func (h *Handler) AISetKey(c *gin.Context) {
 // @Failure 401 {object} domain.ErrorResponse
 // @Router /user/ai/key [delete]
 func (h *Handler) AIClearKey(c *gin.Context) {
-	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
+	claims, ok := middleware.ClaimsFromContext(c)
 	if !ok {
 		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return
@@ -202,7 +206,7 @@ func (h *Handler) AIClearKey(c *gin.Context) {
 // @Failure 401 {object} domain.ErrorResponse
 // @Router /user/ai/key [get]
 func (h *Handler) AIKeyStatus(c *gin.Context) {
-	claims, ok := middleware.ClaimsFromContext(&gin.Context{Request: c.Request})
+	claims, ok := middleware.ClaimsFromContext(c)
 	if !ok {
 		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
 		return

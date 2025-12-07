@@ -15,19 +15,19 @@ func NewRouter(h *Handler, jwtMiddleware gin.HandlerFunc, adminOnly gin.HandlerF
 
 	api := r.Group("/api")
 
-	// Public routes with rate limiting
+	// Публичные маршруты с rate limiting
 	public := api.Group("")
 	public.Use(rl.GinMiddleware())
 	public.POST("/login", h.Login)
 	public.POST("/register", h.Register)
 
-	// Admin routes
+	// Маршруты администратора
 	admin := api.Group("/admin")
 	admin.Use(jwtMiddleware, adminOnly)
 	admin.GET("/ping", h.AdminPing)
 	admin.GET("/options", h.Options)
 
-	// User routes
+	// Пользовательские маршруты
 	user := api.Group("/user")
 	user.Use(jwtMiddleware)
 	user.GET("/ping", h.UserPing)
@@ -36,7 +36,7 @@ func NewRouter(h *Handler, jwtMiddleware gin.HandlerFunc, adminOnly gin.HandlerF
 	user.DELETE("/ai/key", rl.GinMiddleware(), h.AIClearKey)
 	user.GET("/ai/key", rl.GinMiddleware(), h.AIKeyStatus)
 
-	// Swagger docs
+	// Swagger документация
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler()))
 
 	return r

@@ -18,6 +18,7 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 	logger.L.Info("loading config", "env", cfg.Env)
+	logger.Init(cfg.LogLevel, cfg.LogFile)
 
 	if cfg.JWTSecret == "change-me-in-production" {
 		logger.L.Warn("warning: default JWT secret in use")
