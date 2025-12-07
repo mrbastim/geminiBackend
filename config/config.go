@@ -29,6 +29,8 @@ func LoadConfig() *Config {
 		DBPath:    getEnv("DB_PATH", "data.db"),
 		ApiGemini: getEnv("GEMINI_API_KEY", ""),
 		Env:       getEnv("ENV", "dev"), // dev или release
+		LogLevel:  getEnv("LOG_LEVEL", "info"),
+		LogFile:   getEnv("LOG_FILE", ""),
 	}
 
 	// Определяем Gin mode в зависимости от ENV
