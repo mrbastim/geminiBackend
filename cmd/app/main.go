@@ -3,7 +3,7 @@ package main
 // @title Gemini Backend API
 // @version 1.0
 // @description REST API для взаимодействия с Gemini AI и аутентификации.
-// @BasePath /
+// @BasePath /api
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
