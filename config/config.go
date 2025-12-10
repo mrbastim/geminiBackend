@@ -25,13 +25,14 @@ func LoadConfig() *Config {
 	_ = godotenv.Load(".env")
 
 	cfg := &Config{
-		Port:      getEnv("PORT", "8080"),
-		JWTSecret: getEnv("JWT_SECRET", "change-me-in-production"),
-		DBPath:    getEnv("DB_PATH", "data.db"),
-		ApiGemini: getEnv("GEMINI_API_KEY", ""),
-		Env:       getEnv("ENV", "dev"), // dev или release
-		LogLevel:  getEnv("LOG_LEVEL", "info"),
-		LogFile:   getEnv("LOG_FILE", ""),
+		Port:            getEnv("PORT", "8080"),
+		JWTSecret:       getEnv("JWT_SECRET", "change-me-in-production"),
+		DBPath:          getEnv("DB_PATH", "data.db"),
+		ApiGemini:       getEnv("GEMINI_API_KEY", ""),
+		Env:             getEnv("ENV", "dev"), // dev или release
+		LogLevel:        getEnv("LOG_LEVEL", "info"),
+		LogFile:         getEnv("LOG_FILE", ""),
+		RateLimitPerMin: getEnv("RATE_LIMIT_PER_MIN", "false") == "true",
 	}
 
 	// Определяем Gin mode в зависимости от ENV
