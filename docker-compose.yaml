@@ -15,6 +15,9 @@ services:
       DB_PATH: /app/data/data.db
       TRUSTED_PROXIES: 127.0.0.1
     volumes:
-      - ./data:/app/data
+      - app_data:/app/data
     restart: unless-stopped
-    
+
+volumes:
+  app_data:
+
