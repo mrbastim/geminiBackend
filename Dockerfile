@@ -10,6 +10,7 @@ RUN go mod download
 
 COPY . .
 
+RUN go test -v ./...
 
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
 	go build -trimpath -ldflags="-s -w" -o /bin/server ./cmd/app
