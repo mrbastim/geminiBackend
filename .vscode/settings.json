@@ -1,3 +1,4 @@
 {
-    "terminal.integrated.suggest.enabled": true
+    "terminal.integrated.suggest.enabled": true,
+    "makefile.configureOnOpen": true
 }
