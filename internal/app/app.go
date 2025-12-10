@@ -41,7 +41,14 @@ func (a *App) SetupRouter() (*gin.Engine, error) {
 	handler := delivery.NewHandler(authService, aiService, sqlDB)
 
 	// Rate limiters
-	rl := middleware.NewIPRateLimiter(10, time.Minute)
+	var rl middleware.RateLimiter
+	if a.cfg.RateLimitPerMin {
+		logger.L.Info("rate limiting enabled: requests limited per minute")
+		rl = middleware.NewIPRateLimiter(10, time.Minute)
+	} else {
+		logger.L.Info("rate limiting disabled")
+		rl = middleware.NewIPRateLimiter(1, time.Millisecond)
+	}
 
 	// Gin роутер
 	ginRouter := delivery.NewRouter(handler, middleware.JWTAuth(authService), middleware.AdminOnly(), rl)
