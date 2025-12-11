@@ -3,6 +3,7 @@ package domain
 // AITextRequest запрос на генерацию текста
 type AITextRequest struct {
 	Prompt string `json:"prompt"`
+	Model  string `json:"model"`
 }
 
 // AITextResponse данные успешного ответа генерации текста

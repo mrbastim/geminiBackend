@@ -6,7 +6,12 @@ type AIService struct{}
 
 func NewAIService() *AIService { return &AIService{} }
 
-func (s *AIService) AskText(apiKey, prompt string) (string, error) {
-	client := gemini.NewClient(apiKey)
+func (s *AIService) AskText(model, apiKey, prompt string) (string, error) {
+	client := gemini.NewClient(apiKey, model)
 	return client.GenerateText(prompt)
+}
+
+func (s *AIService) ListModels(apiKey string) ([]string, error) {
+	client := gemini.NewClient(apiKey, "")
+	return client.GetAvailableModels()
 }

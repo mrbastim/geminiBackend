@@ -90,6 +90,36 @@ func (h *Handler) Options(c *gin.Context) {
 	utils.Success(c.Writer, map[string]string{"status": "ok"})
 }
 
+// @Summary Список моделей AI
+// @Description Возвращает список доступных моделей Gemini для пользователя
+// @Tags ai
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.AIModelsResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Failure 429 {object} domain.ErrorResponse
+// @Router /user/ai/models [get]
+func (h *Handler) AIModels(c *gin.Context) {
+	claims, ok := middleware.ClaimsFromContext(c)
+	if !ok {
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "no claims")
+		return
+	}
+	usersDB := db.NewUsersProvider(h.db)
+	user, err := usersDB.GetUserByTelegramID(claims.TgID)
+	if err != nil {
+		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorizeds", "user not found")
+		return
+	}
+	models, err := h.ai.ListModels(user.GeminiAPIKey.String)
+	if err != nil {
+		utils.Error(c.Writer, http.StatusInternalServerError, "ai_error", err.Error())
+		return
+	}
+	utils.Success(c.Writer, map[string][]string{"models": models})
+}
+
 // @Summary Генерация текста
 // @Description Генерирует текст по переданному prompt через Gemini
 // @Tags ai
@@ -128,7 +158,7 @@ func (h *Handler) AIText(c *gin.Context) {
 		utils.Error(c.Writer, http.StatusBadRequest, "missing_api_key", "set your Gemini API key first")
 		return
 	}
-	text, err := h.ai.AskText(user.GeminiAPIKey.String, req.Prompt)
+	text, err := h.ai.AskText(req.Model, user.GeminiAPIKey.String, req.Prompt)
 	if err != nil {
 		utils.Error(c.Writer, http.StatusInternalServerError, "ai_error", err.Error())
 		return

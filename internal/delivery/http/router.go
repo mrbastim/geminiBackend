@@ -40,6 +40,7 @@ func NewRouter(h *Handler, jwtMiddleware gin.HandlerFunc, adminOnly gin.HandlerF
 	user := api.Group("/user")
 	user.Use(jwtMiddleware)
 	user.GET("/ping", h.UserPing)
+	user.GET("/ai/models", rlMiddleware, h.AIModels)
 	user.POST("/ai/text", rlMiddleware, h.AIText)
 	user.POST("/ai/key", rlMiddleware, h.AISetKey)
 	user.DELETE("/ai/key", rlMiddleware, h.AIClearKey)
