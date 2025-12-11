@@ -11,6 +11,11 @@ type AITextResponse struct {
 	Text string `json:"text"`
 }
 
+// AIModelsResponse данные успешного ответа списка моделей AI
+type AIModelsResponse struct {
+	Models []string `json:"models"`
+}
+
 // LoginSuccessResponse успешный ответ логина (обёртка стандартного формата)
 type LoginSuccessResponse struct {
 	Status string        `json:"status"`

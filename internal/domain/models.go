@@ -48,12 +48,10 @@ type UserDB struct {
 	UpdatedAt    sql.NullTime
 }
 
-// SetKeyRequest запрос на установку/смену ключа Gemini
 type SetKeyRequest struct {
 	APIKey string `json:"api_key"`
 }
 
-// KeyStatusResponse ответ со статусом наличия ключа
 type KeyStatusResponse struct {
 	HasKey bool `json:"has_key"`
 }
