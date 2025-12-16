@@ -257,6 +257,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/ai/models": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список доступных моделей Gemini для пользователя с подробной информацией",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "Список моделей AI",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.AIModelsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/ai/text": {
             "post": {
                 "security": [
@@ -322,9 +365,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.AIModelsResponse": {
+            "type": "object",
+            "properties": {
+                "models": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ModelInfo"
+                    }
+                }
+            }
+        },
         "domain.AITextRequest": {
             "type": "object",
             "properties": {
+                "model": {
+                    "type": "string"
+                },
                 "prompt": {
                     "type": "string"
                 }
@@ -395,6 +452,46 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.ModelInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "Категория: text, multimodal, embedding, etc",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Описание модели",
+                    "type": "string"
+                },
+                "display_name": {
+                    "description": "Отображаемое имя",
+                    "type": "string"
+                },
+                "input_token_limit": {
+                    "description": "Лимит входных токенов",
+                    "type": "integer"
+                },
+                "is_available": {
+                    "description": "Доступна ли модель сейчас",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Имя модели (например, \"gemini-2.5-flash\")",
+                    "type": "string"
+                },
+                "output_token_limit": {
+                    "description": "Лимит выходных токенов",
+                    "type": "integer"
+                },
+                "supported_actions": {
+                    "description": "Поддерживаемые действия (generateContent, etc)",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

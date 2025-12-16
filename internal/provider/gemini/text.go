@@ -15,14 +15,20 @@ func (c *Client) GenerateText(prompt string) (string, error) {
 		return "", err
 	}
 
+	// Используем модель из клиента, если не указана - дефолтная gemini-2.0-flash-exp
+	model := c.model
+	if model == "" {
+		model = "gemini-2.0-flash-exp"
+	}
+
 	result, err := client.Models.GenerateContent(
 		ctx,
-		"gemini-2.5-flash",
+		model,
 		genai.Text(prompt),
 		&genai.GenerateContentConfig{},
 	)
 	if err != nil {
-		logger.L.Error("failed to generate content", "error", err.Error())
+		logger.L.Error("failed to generate content", "error", err.Error(), "model", model)
 		return "", err
 	}
 	return result.Text(), nil

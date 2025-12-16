@@ -1,7 +1,16 @@
 basePath: /api
 definitions:
+  domain.AIModelsResponse:
+    properties:
+      models:
+        items:
+          $ref: '#/definitions/domain.ModelInfo'
+        type: array
+    type: object
   domain.AITextRequest:
     properties:
+      model:
+        type: string
       prompt:
         type: string
     type: object
@@ -47,6 +56,35 @@ definitions:
     properties:
       token:
         type: string
+    type: object
+  domain.ModelInfo:
+    properties:
+      category:
+        description: 'Категория: text, multimodal, embedding, etc'
+        type: string
+      description:
+        description: Описание модели
+        type: string
+      display_name:
+        description: Отображаемое имя
+        type: string
+      input_token_limit:
+        description: Лимит входных токенов
+        type: integer
+      is_available:
+        description: Доступна ли модель сейчас
+        type: boolean
+      name:
+        description: Имя модели (например, "gemini-2.5-flash")
+        type: string
+      output_token_limit:
+        description: Лимит выходных токенов
+        type: integer
+      supported_actions:
+        description: Поддерживаемые действия (generateContent, etc)
+        items:
+          type: string
+        type: array
     type: object
   domain.OptionsSuccessResponse:
     properties:
@@ -231,6 +269,34 @@ paths:
       security:
       - BearerAuth: []
       summary: Установить ключ Gemini
+      tags:
+      - ai
+  /user/ai/models:
+    get:
+      description: Возвращает список доступных моделей Gemini для пользователя с подробной
+        информацией
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.AIModelsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список моделей AI
       tags:
       - ai
   /user/ai/text:

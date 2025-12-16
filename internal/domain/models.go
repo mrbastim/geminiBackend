@@ -55,3 +55,15 @@ type SetKeyRequest struct {
 type KeyStatusResponse struct {
 	HasKey bool `json:"has_key"`
 }
+
+// ModelInfo информация о модели Gemini
+type ModelInfo struct {
+	Name             string   `json:"name"`               // Имя модели (например, "gemini-2.5-flash")
+	DisplayName      string   `json:"display_name"`       // Отображаемое имя
+	Description      string   `json:"description"`        // Описание модели
+	SupportedActions []string `json:"supported_actions"`  // Поддерживаемые действия (generateContent, etc)
+	InputTokenLimit  int32    `json:"input_token_limit"`  // Лимит входных токенов
+	OutputTokenLimit int32    `json:"output_token_limit"` // Лимит выходных токенов
+	Category         string   `json:"category"`           // Категория: text, multimodal, embedding, etc
+	IsAvailable      bool     `json:"is_available"`       // Доступна ли модель сейчас
+}

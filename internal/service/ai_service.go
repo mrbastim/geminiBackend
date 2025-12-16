@@ -1,6 +1,9 @@
 package service
 
-import "geminiBackend/internal/provider/gemini"
+import (
+	"geminiBackend/internal/domain"
+	"geminiBackend/internal/provider/gemini"
+)
 
 type AIService struct{}
 
@@ -11,7 +14,7 @@ func (s *AIService) AskText(model, apiKey, prompt string) (string, error) {
 	return client.GenerateText(prompt)
 }
 
-func (s *AIService) ListModels(apiKey string) ([]string, error) {
+func (s *AIService) ListModels(apiKey string) ([]domain.ModelInfo, error) {
 	client := gemini.NewClient(apiKey, "")
 	return client.GetAvailableModels()
 }

@@ -91,7 +91,7 @@ func (h *Handler) Options(c *gin.Context) {
 }
 
 // @Summary Список моделей AI
-// @Description Возвращает список доступных моделей Gemini для пользователя
+// @Description Возвращает список доступных моделей Gemini для пользователя с подробной информацией
 // @Tags ai
 // @Produce json
 // @Security BearerAuth
@@ -117,7 +117,7 @@ func (h *Handler) AIModels(c *gin.Context) {
 		utils.Error(c.Writer, http.StatusInternalServerError, "ai_error", err.Error())
 		return
 	}
-	utils.Success(c.Writer, map[string][]string{"models": models})
+	utils.Success(c.Writer, map[string]interface{}{"models": models})
 }
 
 // @Summary Генерация текста
@@ -142,6 +142,10 @@ func (h *Handler) AIText(c *gin.Context) {
 	if req.Prompt == "" {
 		utils.Error(c.Writer, http.StatusBadRequest, "validation_error", "prompt required")
 		return
+	}
+	// Если модель не указана, используем дефолтную
+	if req.Model == "" {
+		req.Model = "gemini-2.0-flash-exp"
 	}
 	claims, ok := middleware.ClaimsFromContext(c)
 	if !ok {
