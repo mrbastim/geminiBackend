@@ -17,7 +17,7 @@ func (c *Client) GenerateText(prompt string) (string, error) {
 
 	result, err := client.Models.GenerateContent(
 		ctx,
-		"gemini-2.5-flash",
+		"gemini-flash-latest",
 		genai.Text(prompt),
 		&genai.GenerateContentConfig{},
 	)
