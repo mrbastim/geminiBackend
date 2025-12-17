@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gemini-backend:latest
-    container_name: gemini-backend
+    image: gemini-backend${IMAGE_SUFFIX:-}:latest
+    container_name: gemini-backend${NAME_SUFFIX:-}
     ports:
       - "${PORT}:${PORT}"
     environment:
