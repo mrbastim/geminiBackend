@@ -16,5 +16,18 @@ func (s *AIService) AskText(model, apiKey, prompt string) (string, error) {
 
 func (s *AIService) ListModels(apiKey string) ([]domain.ModelInfo, error) {
 	client := gemini.NewClient(apiKey, "")
-	return client.GetAvailableModels()
+	allModels, err := client.GetAvailableModels()
+	if err != nil {
+		return nil, err
+	}
+
+	// Фильтруем только активные модели
+	activeModels := make([]domain.ModelInfo, 0)
+	for _, model := range allModels {
+		if model.IsAvailable {
+			activeModels = append(activeModels, model)
+		}
+	}
+
+	return activeModels, nil
 }
