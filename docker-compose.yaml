@@ -14,7 +14,8 @@ services:
         limits:
           memory: 2G
     restart: unless-stopped
-    command: serve
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama pull qwen2:1.5b || true; exec ollama serve"]
 
   app:
     build:

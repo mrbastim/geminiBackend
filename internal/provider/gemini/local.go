@@ -43,6 +43,26 @@ type LocalLLMClient struct {
 	httpClient *http.Client
 }
 
+// IsLocalModel определяет, относится ли имя модели к локальным (Ollama)
+func IsLocalModel(model string) bool {
+	localModels := []string{
+		"local",
+		"qwen",
+		"phi",
+		"llama",
+		"mistral",
+		"gemma",
+	}
+
+	modelLower := strings.ToLower(model)
+	for _, prefix := range localModels {
+		if strings.HasPrefix(modelLower, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // NewLocalLLMClient создает новый клиент для локальной LLM
 func NewLocalLLMClient(endpoint, model string, maxChars int) *LocalLLMClient {
 	// Если модель не указана, используем дефолтную

@@ -4,7 +4,6 @@ import (
 	"geminiBackend/config"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/provider/gemini"
-	"strings"
 )
 
 type AIService struct {
@@ -17,7 +16,7 @@ func NewAIService(cfg *config.Config) *AIService {
 
 func (s *AIService) AskText(model, apiKey, prompt string) (string, error) {
 	// Определяем, локальная это модель или облачная по названию
-	if isLocalModel(model) {
+	if gemini.IsLocalModel(model) {
 		localClient := gemini.NewLocalLLMClient(
 			s.cfg.LocalLLMEndpoint,
 			model,
@@ -29,27 +28,6 @@ func (s *AIService) AskText(model, apiKey, prompt string) (string, error) {
 	// Иначе используем Gemini
 	client := gemini.NewClient(apiKey, model)
 	return client.GenerateText(prompt)
-}
-
-// isLocalModel проверяет, является ли модель локальной
-func isLocalModel(model string) bool {
-	// Список префиксов/имен локальных моделей
-	localModels := []string{
-		"local",
-		"qwen",
-		"phi",
-		"llama",
-		"mistral",
-		"gemma",
-	}
-
-	modelLower := strings.ToLower(model)
-	for _, local := range localModels {
-		if strings.HasPrefix(modelLower, local) {
-			return true
-		}
-	}
-	return false
 }
 
 func (s *AIService) ListModels(apiKey string) ([]domain.ModelInfo, error) {

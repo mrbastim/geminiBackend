@@ -25,11 +25,13 @@ func setupTestServer(t *testing.T) (*gin.Engine, func()) {
 	_ = godotenv.Load(".env.test")
 
 	cfg := &config.Config{
-		Port:      os.Getenv("PORT"),
-		JWTSecret: os.Getenv("JWT_SECRET"),
-		DBPath:    os.Getenv("DB_PATH"),
-		ApiGemini: os.Getenv("GEMINI_API_KEY"),
-		Env:       os.Getenv("ENV"), // dev или release
+		Port:             os.Getenv("PORT"),
+		JWTSecret:        os.Getenv("JWT_SECRET"),
+		DBPath:           testDB,
+		ApiGemini:        os.Getenv("GEMINI_API_KEY"),
+		Env:              os.Getenv("ENV"), // dev или release
+		LocalLLMEndpoint: os.Getenv("LOCAL_LLM_ENDPOINT"),
+		LocalLLMMaxChars: 10000,
 	}
 
 	// Устанавливаем Gin в тестовый режим
