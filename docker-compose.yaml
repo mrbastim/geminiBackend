@@ -1,4 +1,21 @@
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gemini-ollama${NAME_SUFFIX:-}
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_MAX_LOADED_MODELS=1
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    restart: unless-stopped
+    command: serve
+
   app:
     build:
       context: .
@@ -14,10 +31,15 @@ services:
       PORT: "${PORT}"
       DB_PATH: /app/data/data.db
       TRUSTED_PROXIES: ${TRUSTED_PROXIES}
+      LOCAL_LLM_ENDPOINT: http://ollama:11434
+      LOCAL_LLM_MAX_CHARS: ${LOCAL_LLM_MAX_CHARS:-10000}
     volumes:
       - app_data:/app/data
+    depends_on:
+      - ollama
     restart: unless-stopped
 
 volumes:
   app_data:
+  ollama_data:
 

@@ -44,6 +44,8 @@ http://localhost:8080/swagger/index.html
 | `DB_PATH` | `data.db` | Путь к SQLite БД |
 | `GEMINI_API_KEY` | `` | Google Gemini API ключ |
 | `TRUSTED_PROXIES` | `127.0.0.1,localhost` | Доверенные proxies |
+| `LOCAL_LLM_ENDPOINT` | `http://ollama:11434` | Эндпоинт локальной LLM (Ollama) |
+| `LOCAL_LLM_MAX_CHARS` | `10000` | Лимит символов на запрос для локальной LLM |
 
 ### Пример .env для production
 
@@ -175,6 +177,19 @@ Content-Type: application/json
 {
   "prompt": "Расскажи о языке программирования Go",
   "model": "gemini-2.0-flash-exp"
+}
+```
+
+**Локальная модель через Ollama** (если модель начинается на `qwen`, `phi`, `llama`, `mistral`, `gemma` или `local`, запрос уйдет в локальную LLM):
+
+```http
+POST /api/user/ai/text
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "prompt": "Исправь текст: Привт, кк дла?",
+  "model": "qwen2:1.5b"
 }
 ```
 
