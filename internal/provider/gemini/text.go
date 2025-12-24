@@ -15,10 +15,10 @@ func (c *Client) GenerateText(prompt string) (string, error) {
 		return "", err
 	}
 
-	// Используем модель из клиента, если не указана - дефолтная gemini-2.0-flash-exp
+	// Используем модель из клиента, если не указана - дефолтная gemini-2.5-flash
 	model := c.model
 	if model == "" {
-		model = "gemini-2.0-flash-exp"
+		model = "gemini-2.5-flash"
 	}
 
 	result, err := client.Models.GenerateContent(
