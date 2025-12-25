@@ -41,6 +41,7 @@
 
 ```env
 # URL Ollama-сервера (по умолчанию: http://ollama:11434)
+OLLAMA_PORT=11434
 LOCAL_LLM_ENDPOINT=http://ollama:11434
 
 # Максимум символов на запрос (по умолчанию: 10000)
@@ -60,9 +61,12 @@ RATE_LIMIT_PER_MIN=true
 TRUSTED_PROXIES=
 
 # Локальная LLM
+OLLAMA_PORT=11434
 LOCAL_LLM_ENDPOINT=http://ollama:11434
 LOCAL_LLM_MAX_CHARS=10000
 ```
+
+> Если порт 11434 на хосте занят, измените `OLLAMA_PORT` (например, 11435) и перезапустите `docker-compose up -d --force-recreate ollama`.
 
 ## Запуск
 
