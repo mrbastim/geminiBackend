@@ -5,6 +5,7 @@ import (
 	"geminiBackend/internal/delivery/http/middleware"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/provider/db"
+	"geminiBackend/internal/provider/gemini"
 	"geminiBackend/internal/service"
 	"geminiBackend/pkg/logger"
 	"geminiBackend/pkg/utils"
@@ -158,11 +159,17 @@ func (h *Handler) AIText(c *gin.Context) {
 		utils.Error(c.Writer, http.StatusUnauthorized, "unauthorized", "user not found")
 		return
 	}
-	if !user.GeminiAPIKey.Valid || user.GeminiAPIKey.String == "" {
-		utils.Error(c.Writer, http.StatusBadRequest, "missing_api_key", "set your Gemini API key first")
-		return
+
+	// Для локальных моделей ключ не требуется
+	apiKey := user.GeminiAPIKey.String
+	if !gemini.IsLocalModel(req.Model) {
+		if !user.GeminiAPIKey.Valid || user.GeminiAPIKey.String == "" {
+			utils.Error(c.Writer, http.StatusBadRequest, "missing_api_key", "set your Gemini API key first")
+			return
+		}
 	}
-	text, err := h.ai.AskText(req.Model, user.GeminiAPIKey.String, req.Prompt)
+
+	text, err := h.ai.AskText(req.Model, apiKey, req.Prompt)
 	if err != nil {
 		utils.Error(c.Writer, http.StatusInternalServerError, "ai_error", err.Error())
 		return

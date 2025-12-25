@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -8,16 +9,18 @@ import (
 )
 
 type Config struct {
-	Port            string   `yaml:"port"`
-	JWTSecret       string   `yaml:"jwtSecret"`
-	DBPath          string   `yaml:"dbPath"`
-	ApiGemini       string   `yaml:"apiGeminiKey"`
-	Env             string   `yaml:"env"`             // dev, release
-	GinMode         string   `yaml:"ginMode"`         // debug, release
-	TrustedProxies  []string `yaml:"trustedProxies"`  // список доверенных IP/сетей
-	LogLevel        string   `yaml:"logLevel"`        // debug, info, warn, error
-	LogFile         string   `yaml:"logFile"`         // путь к файлу логов (если пусто - логи в stdout)
-	RateLimitPerMin bool     `yaml:"rateLimitPerMin"` // ограничение запросов в минуту
+	Port             string   `yaml:"port"`
+	JWTSecret        string   `yaml:"jwtSecret"`
+	DBPath           string   `yaml:"dbPath"`
+	ApiGemini        string   `yaml:"apiGeminiKey"`
+	Env              string   `yaml:"env"`              // dev, release
+	GinMode          string   `yaml:"ginMode"`          // debug, release
+	TrustedProxies   []string `yaml:"trustedProxies"`   // список доверенных IP/сетей
+	LogLevel         string   `yaml:"logLevel"`         // debug, info, warn, error
+	LogFile          string   `yaml:"logFile"`          // путь к файлу логов (если пусто - логи в stdout)
+	RateLimitPerMin  bool     `yaml:"rateLimitPerMin"`  // ограничение запросов в минуту
+	LocalLLMEndpoint string   `yaml:"localLLMEndpoint"` // URL локального Ollama (например, http://ollama:11434)
+	LocalLLMMaxChars int      `yaml:"localLLMMaxChars"` // макс символов для локальной LLM (10000 по умолчанию)
 }
 
 func LoadConfig() *Config {
@@ -25,14 +28,16 @@ func LoadConfig() *Config {
 	_ = godotenv.Load(".env")
 
 	cfg := &Config{
-		Port:            getEnv("PORT", "8080"),
-		JWTSecret:       getEnv("JWT_SECRET", "change-me-in-production"),
-		DBPath:          getEnv("DB_PATH", "data.db"),
-		ApiGemini:       getEnv("GEMINI_API_KEY", ""),
-		Env:             getEnv("ENV", "dev"), // dev или release
-		LogLevel:        getEnv("LOG_LEVEL", "info"),
-		LogFile:         getEnv("LOG_FILE", ""),
-		RateLimitPerMin: getEnv("RATE_LIMIT_PER_MIN", "false") == "true",
+		Port:             getEnv("PORT", "8080"),
+		JWTSecret:        getEnv("JWT_SECRET", "change-me-in-production"),
+		DBPath:           getEnv("DB_PATH", "data.db"),
+		ApiGemini:        getEnv("GEMINI_API_KEY", ""),
+		Env:              getEnv("ENV", "dev"), // dev или release
+		LogLevel:         getEnv("LOG_LEVEL", "info"),
+		LogFile:          getEnv("LOG_FILE", ""),
+		RateLimitPerMin:  getEnv("RATE_LIMIT_PER_MIN", "false") == "true",
+		LocalLLMEndpoint: getEnv("LOCAL_LLM_ENDPOINT", "http://ollama:11434"),
+		LocalLLMMaxChars: getEnvInt("LOCAL_LLM_MAX_CHARS", 10000),
 	}
 
 	// Определяем Gin mode в зависимости от ENV
@@ -57,6 +62,16 @@ func LoadConfig() *Config {
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
+	}
+	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	if value, ok := os.LookupEnv(key); ok {
+		var intVal int
+		if _, err := fmt.Sscanf(value, "%d", &intVal); err == nil {
+			return intVal
+		}
 	}
 	return fallback
 }

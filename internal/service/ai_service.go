@@ -1,15 +1,31 @@
 package service
 
 import (
+	"geminiBackend/config"
 	"geminiBackend/internal/domain"
 	"geminiBackend/internal/provider/gemini"
 )
 
-type AIService struct{}
+type AIService struct {
+	cfg *config.Config
+}
 
-func NewAIService() *AIService { return &AIService{} }
+func NewAIService(cfg *config.Config) *AIService {
+	return &AIService{cfg: cfg}
+}
 
 func (s *AIService) AskText(model, apiKey, prompt string) (string, error) {
+	// Определяем, локальная это модель или облачная по названию
+	if gemini.IsLocalModel(model) {
+		localClient := gemini.NewLocalLLMClient(
+			s.cfg.LocalLLMEndpoint,
+			model,
+			s.cfg.LocalLLMMaxChars,
+		)
+		return localClient.GenerateTextChunked(prompt, s.cfg.LocalLLMMaxChars)
+	}
+
+	// Иначе используем Gemini
 	client := gemini.NewClient(apiKey, model)
 	return client.GenerateText(prompt)
 }

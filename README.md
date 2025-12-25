@@ -47,6 +47,8 @@ http://localhost:8080/swagger/index.html
 | `LOG_LEVEL` | `info` | Уровень логирования (`debug`, `info`, `warn`, `error`) |
 | `LOG_FILE` | `` | Путь к файлу логов (если пусто — вывод в stdout) |
 | `RATE_LIMIT_PER_MIN` | `false` | Включить ограничение 10 запросов в минуту с одного IP (`true`/`false`) |
+| `LOCAL_LLM_ENDPOINT` | `http://ollama:11434` | Эндпоинт локальной LLM (Ollama) |
+| `LOCAL_LLM_MAX_CHARS` | `10000` | Лимит символов на запрос для локальной LLM |
 
 ### Пример .env для production
 
@@ -180,6 +182,19 @@ Content-Type: application/json
 {
   "prompt": "Расскажи о языке программирования Go",
   "model": "gemini-2.0-flash-exp"
+}
+```
+
+**Локальная модель через Ollama** (если модель начинается на `qwen`, `phi`, `llama`, `mistral`, `gemma` или `local`, запрос уйдет в локальную LLM):
+
+```http
+POST /api/user/ai/text
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "prompt": "Исправь текст: Привт, кк дла?",
+  "model": "qwen2:1.5b"
 }
 ```
 

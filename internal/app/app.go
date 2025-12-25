@@ -37,7 +37,7 @@ func (a *App) SetupRouter() (*gin.Engine, error) {
 
 	// Провайдеры и сервисы
 	authService := service.NewAuthService(a.cfg.JWTSecret, sqlDB)
-	aiService := service.NewAIService()
+	aiService := service.NewAIService(a.cfg)
 	handler := delivery.NewHandler(authService, aiService, sqlDB)
 
 	// Rate limiters

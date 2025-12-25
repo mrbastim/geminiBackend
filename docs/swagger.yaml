@@ -303,7 +303,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Генерирует текст по переданному prompt через Gemini
+      description: Генерирует текст по переданному prompt через Gemini или локальную LLM (Ollama) в зависимости от поля `model`
       parameters:
       - description: Запрос на генерацию
         in: body
